@@ -26,6 +26,29 @@ const { ConnectionPoolClosedEvent } = require('mongodb');
     //     }
     // });
     app.use(express.json());
+
+    app.get("/user", async(req,res)=>{
+         try{
+             const users = await User.find({emailId: req.body.emailId});
+             if(users.length === 0){
+                    return res.status(404).send('User not found');
+             }
+             else{
+                    return res.send(users);
+             }
+         }catch(err){
+             res.status(400).send('error while fetching user:' + err.message);
+         }
+    });
+
+    app.get("/feed", async(req,res)=>{
+        try{
+            const users = await User.find({});
+            res.send(users);
+        }catch(err){
+            res.status(400).send('error while fetching users:' + err.message);
+        }
+    });
     app.post("/signup", async(req,res)=>{
         const user = new User(req.body);
         try{
