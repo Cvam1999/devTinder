@@ -3,6 +3,7 @@ const app = express();
 const connectDB = require('./config/database');
 const e = require('express');
 const User = require('./models/user');
+const { ConnectionPoolClosedEvent } = require('mongodb');
 //const {adminAuth} = require('./middlewares/auth');
 
 // app.use("/admin",adminAuth);
@@ -24,22 +25,15 @@ const User = require('./models/user');
     //         res.status(500).send("something went wrong");
     //     }
     // });
-
+    app.use(express.json());
     app.post("/signup", async(req,res)=>{
-        const userObj = {
-            firstName: 'Suraj',
-            lastName: 'Joshi',
-            emailId: 'surajjoshi@gmail,com',
-            password: 'suraj@123',
-            age: 25,
-            gender:'Male'
-        }
-        const user = new User(userObj);
+        const user = new User(req.body);
         try{
             await user.save();
-            res.send('User created');
+            res.send('User created successfully');
         }catch(err){
             res.status(400).send('error while saving user:' + err.message);
+        }
     });
     
     connectDB().then(() => {
