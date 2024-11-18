@@ -4,6 +4,8 @@ const connectDB = require('./config/database');
 const e = require('express');
 const User = require('./models/user');
 const { ConnectionPoolClosedEvent } = require('mongodb');
+const {validateSignUpData} = require('./utils/validation');
+const bcrypt = require('bcrypt');
 //const {adminAuth} = require('./middlewares/auth');
 
 // app.use("/admin",adminAuth);
@@ -26,6 +28,24 @@ const { ConnectionPoolClosedEvent } = require('mongodb');
     //     }
     // });
     app.use(express.json());
+    app.use("/login", async(req,res)=> {
+        try{
+            const{emailId, password} = req.body;
+            const user = await User.findOne({emailId: emailId});
+            if(!user){
+                throw new Error("Email ID not presnet in DB");
+            }
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if(isPasswordValid){
+                res.send('Login success');
+                
+            }else{
+                throw new Error("Password is not valid");
+            }
+        }catch(err){
+            res.status(400).send('error while login:' + err.message);
+        }
+    });
 
     app.get("/user", async(req,res)=>{
          try{
@@ -50,12 +70,18 @@ const { ConnectionPoolClosedEvent } = require('mongodb');
         }
     });
     app.post("/signup", async(req,res)=>{
-        const user = new User(req.body);
         try{
+            // validation of data
+            validateSignUpData(req);
+            //encrypt password
+            const{password, firstName,lastName,emailId} = req.body;
+           const passwordHash = await bcrypt.hash(password, 10);
+           console.log(passwordHash);
+        const user = new User({firstName,lastName,emailId,password: passwordHash});
             await user.save();
             res.send('User created successfully');
         }catch(err){
-            res.status(400).send('error while saving user:' + err.message);
+            res.status(400).send('ERROR : ' + err.message);
         }
     });
     app.delete("/user", async(req,res)=>{
