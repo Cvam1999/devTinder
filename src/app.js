@@ -6,28 +6,14 @@ const User = require('./models/user');
 const { ConnectionPoolClosedEvent } = require('mongodb');
 const {validateSignUpData} = require('./utils/validation');
 const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const jwt = require("jsonwebtoken");
 //const {adminAuth} = require('./middlewares/auth');
 
 // app.use("/admin",adminAuth);
 
-// app.get("/admin/getAllData",(req,res)=> {
-//     res.send('All data sent!');
-// });
-// app.get("/admin/deleteUser",(req,res)=> {
-//     res.send('Deleted a user!');
-// });
-
-    // app.get("/getUserData",(req,res)=>{
-    //         throw new Error("gwqdqaeerg");  
-    //     res.send('User data sent!');
-
-    // });
-    // app.use("/",(err,req,res,next)=>{
-    //     if(err){
-    //         res.status(500).send("something went wrong");
-    //     }
-    // });
     app.use(express.json());
+    app.use(cookieParser());
     app.use("/login", async(req,res)=> {
         try{
             const{emailId, password} = req.body;
@@ -37,11 +23,39 @@ const bcrypt = require('bcrypt');
             }
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if(isPasswordValid){
-                res.send('Login success');
+
+                //create a JWT token
+                const token = await jwt.sign({_id: user._id},"DEV@TINDER");
+              
+                //add the token to the cookie and send the response back to user
+                res.cookie("token",token);
+                res.send('Login successful!');
                 
             }else{
                 throw new Error("Password is not valid");
             }
+        }catch(err){
+            res.status(400).send('error while login:' + err.message);
+        }
+    });
+    app.use("/profile", async(req,res)=>{
+        try{
+            const cookies = req.cookies;
+        const {token} = cookies;
+        if(!token){
+            throw new Error("invalid token");
+        }
+        //validate my token
+        const decodedMessage = await jwt.verify(token,"DEV@TINDER");
+        console.log(decodedMessage);
+        const{ _id} = decodedMessage;
+        
+        const user = await User.findById(_id);
+        if(!user){
+            throw new Error("please login again");
+        }
+
+        res.send(user);
         }catch(err){
             res.status(400).send('error while login:' + err.message);
         }
