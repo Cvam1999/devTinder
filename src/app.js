@@ -58,6 +58,41 @@ const { ConnectionPoolClosedEvent } = require('mongodb');
             res.status(400).send('error while saving user:' + err.message);
         }
     });
+    app.delete("/user", async(req,res)=>{
+        const userId = req.body.userId;
+        try{
+            const users = await User.findByIdAndDelete(userId);
+            res.send('User deleted successfully');
+        }catch(err){    
+            res.status(400).send('error while deleting user:' + err.message);
+        }
+    });
+    app.patch("/user/:userId", async(req,res)=>{
+        const userId = req.params?.userId;
+        const data = req.body;
+
+        
+        try{
+            const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age", "skills"];
+        const isUpdateAllowed = Object.keys(data).every((k) => ALLOWED_UPDATES.includes(k));
+
+        if(!isUpdateAllowed){
+            throw new Error("update not allowed");
+        }
+        if(data?.skills.length> 10){
+            throw new Error("skills array length should be less than 10");
+        }
+
+            const users = await User.findByIdAndUpdate(userId, data, {
+                returnDocument: 'after',
+                runValidators: true
+            }); 
+            console.log(users);         
+            res.send('User updated successfully');
+        }catch(err){
+            res.status(400).send('error while updating user: ' + err.message);
+        }
+    });
     
     connectDB().then(() => {
         console.log("Database connected");
