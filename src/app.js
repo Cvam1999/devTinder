@@ -8,7 +8,7 @@ const {validateSignUpData} = require('./utils/validation');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const jwt = require("jsonwebtoken");
-//const {adminAuth} = require('./middlewares/auth');
+const { userAuth} = require('./middlewares/auth');
 
 // app.use("/admin",adminAuth);
 
@@ -25,10 +25,10 @@ const jwt = require("jsonwebtoken");
             if(isPasswordValid){
 
                 //create a JWT token
-                const token = await jwt.sign({_id: user._id},"DEV@TINDER");
+                const token = await jwt.sign({_id: user._id},"DEV@TINDER",{expiresIn: "1d"});
               
                 //add the token to the cookie and send the response back to user
-                res.cookie("token",token);
+                res.cookie("token",token, {expires: new Date(Date.now() + 86400000)});
                 res.send('Login successful!');
                 
             }else{
@@ -38,28 +38,19 @@ const jwt = require("jsonwebtoken");
             res.status(400).send('error while login:' + err.message);
         }
     });
-    app.use("/profile", async(req,res)=>{
+    app.post("/sendConnectionRequest",userAuth, async(req,res)=> {
+        //sending a connection request
+        console.log("sending a connection request");
+        res.send('connection request sent');
+    });
+    app.use("/profile", userAuth, async(req,res)=>{
         try{
-            const cookies = req.cookies;
-        const {token} = cookies;
-        if(!token){
-            throw new Error("invalid token");
-        }
-        //validate my token
-        const decodedMessage = await jwt.verify(token,"DEV@TINDER");
-        console.log(decodedMessage);
-        const{ _id} = decodedMessage;
-        
-        const user = await User.findById(_id);
-        if(!user){
-            throw new Error("please login again");
-        }
-
-        res.send(user);
+            const user = req.user;
+            res.send(user);
         }catch(err){
             res.status(400).send('error while login:' + err.message);
         }
-    });
+    });  
 
     app.get("/user", async(req,res)=>{
          try{
