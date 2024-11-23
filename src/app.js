@@ -19,13 +19,13 @@ const { userAuth} = require('./middlewares/auth');
             const{emailId, password} = req.body;
             const user = await User.findOne({emailId: emailId});
             if(!user){
-                throw new Error("Email ID not presnet in DB");
+                throw new Error("Email ID not present in DB");
             }
-            const isPasswordValid = await bcrypt.compare(password, user.password);
+            const isPasswordValid = await user.validatePassword(password);
             if(isPasswordValid){
 
                 //create a JWT token
-                const token = await jwt.sign({_id: user._id},"DEV@TINDER",{expiresIn: "1d"});
+                const token = await user.getJWT();
               
                 //add the token to the cookie and send the response back to user
                 res.cookie("token",token, {expires: new Date(Date.now() + 86400000)});
