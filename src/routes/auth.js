@@ -3,6 +3,7 @@ const authRouter = express.Router();
 const {validateSignUpData} = require('../utils/validation');
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
+
 authRouter.post("/signup", async(req,res)=>{
     try{
         // validation of data
@@ -18,7 +19,7 @@ authRouter.post("/signup", async(req,res)=>{
         res.status(400).send('ERROR : ' + err.message);
     }
 });
-authRouter.use("/login", async(req,res)=> {
+authRouter.post("/login", async(req,res)=> {
     try{
         const{emailId, password} = req.body;
         const user = await User.findOne({emailId: emailId});
@@ -40,6 +41,14 @@ authRouter.use("/login", async(req,res)=> {
         }
     }catch(err){
         res.status(400).send('error while login:' + err.message);
+    }
+});
+authRouter.post("/logout", async(req,res)=> {
+    try{
+        res.cookie("token", null, {expires: new Date(Date.now())});
+        res.send('Logout successful!');
+    }catch(err){
+        res.status(400).send('error while logout:' + err.message);
     }
 });
 module.exports = authRouter;
