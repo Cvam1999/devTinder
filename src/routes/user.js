@@ -73,7 +73,7 @@ userRouter.get("/feed",userAuth, async(req,res)=>{
            ]
            
        }).select("fromUserId toUserId");
-       const hideUsersFromFeed = new set();
+       const hideUsersFromFeed = new Set();
          connectionRequests.forEach((row)=>{
               hideUsersFromFeed.add(row.fromUserId.toString());
               hideUsersFromFeed.add(row.toUserId.toString());
@@ -92,7 +92,7 @@ userRouter.get("/feed",userAuth, async(req,res)=>{
                  }
              ]
          }).select(USER_SAFE_DATA).skip(skip).limit(limit);
-       res.send(users);
+       res.json({data: users});
     }catch(err){
         res.status(400).send('error while fetching feed:' + err.message);
     }
