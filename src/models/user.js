@@ -46,6 +46,7 @@ const userSchema = new mongoose.Schema({
     },
     photoUrl: {
         type: String,
+        default: "https://media.istockphoto.com/id/1142192548/vector/man-avatar-profile-male-face-silhouette-or-icon-isolated-on-white-background-vector.jpg?s=612x612&w=0&k=20&c=DUKuRxK9OINHXt3_4m-GxraeoDDlhNuCbA9hp6FotFE=",
         validate(value){
             if(!validator.isURL(value)){
                 throw new Error("URL is not valid " + value);
